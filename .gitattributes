@@ -1,2 +1,4 @@
 .gitignore text
 .gitattributes text 
+package.json
+package-lock.json

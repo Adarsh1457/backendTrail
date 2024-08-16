@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Dashboard</title>
+</head>
+<body>
+    <h1>Employee Dashboard</h1>
+    <div id="employeeInfo"></div>
+    <button id="checkInBtn">Check In</button>
+    <button id="checkOutBtn">Check Out</button>
+    <h2>Attendance History</h2>
+    <div id="attendanceHistory"></div>
+    <h2>Tasks</h2>
+    <div id="taskList"></div>
+    <h2>Monthly Summary</h2>
+    <div id="monthlySummary"></div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'http://localhost:5000/login.html';
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            options.headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`
+            };
+            return fetch(url, options);
+        }
+
+        async function checkIn() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    try {
+                        const response = await fetchWithAuth('http://localhost:5000/api/attendance/check-in', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                            })
+                        });
+                        const data = await response.json();
+                        alert(data.message);
+                        loadAttendanceHistory();
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Check-in failed');
+                    }
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        async function checkOut() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    try {
+                        const response = await fetchWithAuth('http://localhost:5000/api/attendance/check-out', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                            })
+                        });
+                        const data = await response.json();
+                        alert(data.message);
+                        loadAttendanceHistory();
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Check-out failed');
+                    }
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        async function loadAttendanceHistory() {
+            try {
+                const response = await fetchWithAuth('http://localhost:5000/api/attendance/history');
+                const data = await response.json();
+                const historyDiv = document.getElementById('attendanceHistory');
+                historyDiv.innerHTML = data.map(record => `
+                    <p>Date: ${new Date(record.date).toLocaleDateString()}, 
+                       Status: ${record.status}, 
+                       Working Hours: ${record.totalWorkingHours.toFixed(2)}</p>
+                `).join('');
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadTasks() {
+            try {
+                const response = await fetchWithAuth('http://localhost:5000/api/tasks');
+                const tasks = await response.json();
+                const taskListDiv = document.getElementById('taskList');
+                taskListDiv.innerHTML = tasks.map(task => `
+                    <p>Task: ${task.description}, Status: ${task.status}</p>
+                `).join('');
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadMonthlySummary() {
+            try {
+                const response = await fetchWithAuth('http://localhost:5000/api/attendance/monthly-summary');
+                const summary = await response.json();
+                const summaryDiv = document.getElementById('monthlySummary');
+                summaryDiv.innerHTML = `
+                    <p>Working Days: ${summary.workingDays}</p>
+                    <p>Leave Days: ${summary.leaveDays}</p>
+                    <p>Total Working Hours: ${summary.totalWorkingHours.toFixed(2)}</p>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        document.getElementById('checkInBtn').addEventListener('click', checkIn);
+        document.getElementById('checkOutBtn').addEventListener('click', checkOut);
+
+        // Load initial data
+        loadAttendanceHistory();
+        loadTasks();
+        loadMonthlySummary();
+    </script>
+</body>
+</html>

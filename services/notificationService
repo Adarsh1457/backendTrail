@@ -1,0 +1,9 @@
+const { io } = require('../app');
+
+exports.sendLateCheckInNotification = (employeeId, employeeName) => {
+    io.emit('lateCheckIn', { employeeId, employeeName });
+};
+
+exports.sendMissedAttendanceNotification = (employeeId, employeeName) => {
+    io.emit('missedAttendance', { employeeId, employeeName });
+};
