@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register New Employee</title>
+</head>
+<body>
+    <h1>Register New Employee</h1>
+    <form id="registerForm">
+        <input type="text" id="name" placeholder="Full Name" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <input type="text" id="employeeId" placeholder="Employee ID" required>
+        <input type="text" id="department" placeholder="Department" required>
+        <input type="text" id="role" placeholder="Role" required>
+        <input type="tel" id="phoneNumber" placeholder="Phone Number" required>
+        <input type="text" id="branch" placeholder="Branch" required> <!-- Added branch field -->
+        <button type="submit">Register</button>
+    </form>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                employeeId: document.getElementById('employeeId').value,
+                department: document.getElementById('department').value,
+                role: document.getElementById('role').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                branch: document.getElementById('branch').value // Added branch field
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+
+                if (response.ok) {
+                    alert('Registration successful!');
+                    window.location.href = '/login.html';
+                } else {
+                    const errorData = await response.json();
+                    alert(`Registration failed: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred during registration.');
+            }
+        });
+    </script>
+</body>
+</html>
